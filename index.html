@@ -1,0 +1,353 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Go & Flutter</title>
+
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/hft.css" id="theme">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/monokai.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section data-background-image="https://media.giphy.com/media/ASd0Ukj0y3qMM/giphy.gif">
+          <h1 class="title">Go & Flutter</h1>
+          <h3 class="title">Test implementation & Comparison</h3>
+        </section>
+        <section>
+          <section data-background-image="https://media.giphy.com/media/9fuvOqZ8tbZOU/giphy.gif">
+            <h1 class="title">Use-Case</h1>
+          </section>
+          <section>
+            <p>In Stuttgart, the walk from Marienplatz to Strohberg 38 is full of dog poo.</p>
+            <iframe src="https://www.google.com/maps/embed?pb=!1m28!1m12!1m3!1d2629.9553835013844!2d9.168032166449693!3d48.76364832927837!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m13!3e2!4m5!1s0x4799db50ee337777%3A0x658987d689f55e5a!2sMarienplatz%2C%2070178%20Stuttgart!3m2!1d48.7643321!2d9.167539099999999!4m5!1s0x4799db540aec5417%3A0xfc728f14483ec11c!2sStrohberg%2038%2C%2070180%20Stuttgart%2C%20Deutschland!3m2!1d48.7618848!2d9.172741199999999!5e0!3m2!1sen!2sde!4v1571734840804!5m2!1sen!2sde" width="600" height="450" frameborder="0" style="border:0;" allowfullscreen=""></iframe>
+          </section>
+          <section>
+            <p>Thesis: We create an app, document all poop occurences, and tell the city to clean up!</p>
+          </section>
+        </section>
+        <section>
+          <section data-background-image="./img/gopher.gif">
+            <h1 class="title">Go</h1>
+          </section>
+          <section>
+            <h3>Syntax</h3>
+            <pre><code class="go" data-trim data-noescape>
+              package main
+
+              import (
+                "fmt"
+                "math"
+              )
+
+              type Vertex struct {
+                X, Y float64
+              }
+
+              func Abs(v Vertex) float64 {
+                return math.Sqrt(v.X*v.X + v.Y*v.Y)
+              }
+
+              func main() {
+                v := Vertex{3, 4}
+                fmt.Println(Abs(v))
+              }			
+            </code></pre>
+          </section>
+          <section>
+            <h3>Testing in Go: Mocking</h3>
+            <p>Write an interface</p>
+            <pre><code class="go" data-trim data-noescape>
+              type ImageStoreAPI interface {
+                Init(svc s3iface.S3API, s3Uploader s3manageriface.UploaderAPI)
+                UploadToBucket(bucketName string, base64Image string, fileName string) (*s3manager.UploadOutput, error)
+                GetBucketPolicy(bucketName string) (map[string]interface{}, error)
+                SetBucketPolicy(bucketName string) error
+                PolicyAsString(bucketName string) (string, error)
+              }							
+            </code></pre>
+          </section>
+          <section>
+            <h3>Testing in Go: Mocking</h3>
+            <p>Mock functions</p>
+            <pre><code class="go" data-trim data-noescape>
+              func (m *mockS3Client) GetBucketPolicy(*s3.GetBucketPolicyInput) (*s3.GetBucketPolicyOutput, error) {
+                policy := "{ \"wat\": \"yas\"}"
+                return &s3.GetBucketPolicyOutput{Policy: &policy}, nil
+              }		
+            </code></pre>
+          </section>
+          <section>
+            <h3>Testing in Go: Mocking</h3>
+            <p>Write a test case</p>
+            <pre><code class="go" data-trim data-noescape>
+              Convey("getBucketPolicy should return a map", t, func() {
+                policy, _ := imgStore.GetBucketPolicy("test-bucket")
+            
+                So(policy["wat"], ShouldEqual, "yas")
+              })
+            </code></pre>
+          </section>
+          <section>
+            <h3>Testing in Go: Convey Dashboard</h3>
+            <img src="./img/convey.png" />
+          </section>
+          <section>
+            <h3>Testing in Go: Coverage</h3>
+            <img src="./img/coverage.png" />
+          </section>
+          <section>
+            <h3>Conclusion: Is go any good?</h3>
+            <ul>
+              <li>➕ Open Source</li>
+              <li>➕ Concurrency</li>
+              <li>➕ Cross platform</li>
+              <li>➕ Garbage collector</li>
+              <li>➕ Min-sized Docker Containers (can use scratch containers)</li>
+              <li>➖ Syntax can be different</li>
+              <li>➖ No Class system, like e.g. Java</li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- Flutter -->
+
+        <section>
+          <section data-background-image="https://media.giphy.com/media/5jSZKACQEHxwhxQTEZ/giphy.gif">
+            <h1 class="title">Flutter</h1>
+          </section>
+          <section>
+            <h3>Syntax</h3>
+            <pre><code class="dart" data-trim data-noescape>
+              class Map extends StatefulWidget {
+                @override
+                State<Map> createState() => MapState();
+              }
+              
+              class MapState extends State<Map> {
+                Completer<GoogleMapController> _controller = Completer();
+                Geolocator _geolocator = Geolocator();
+                CameraPosition _startingPos;
+              
+                @override
+                void initState() {
+                  super.initState();
+              
+                  _geolocator
+                      .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+                      .then((currentPosition) {
+                    var camPos = CameraPosition(
+                      zoom: zoomLevel,
+                      target: LatLng(currentPosition.latitude, currentPosition.longitude),
+                    );
+                    setState(() {
+                      _startingPos = camPos;
+                    });
+                  });
+                }
+              }
+            </code></pre>
+          </section>
+          <section>
+            <h3>Testing in Flutter: Unit testing</h3>
+            <pre><code class="dart" data-trim data-noescape>
+              import 'package:test/test.dart';
+              import 'package:counter_app/counter.dart';
+
+              void main() {
+                test('Counter value should be incremented', () {
+                  final counter = Counter();
+
+                  counter.increment();
+
+                  expect(counter.value, 1);
+                });
+              }
+            </code></pre>
+          </section>
+          <section>
+            <h3>Testing in Flutter: Widget testing</h3>
+            <pre><code class="dart" data-trim data-noescape>
+              void main() {
+                testWidgets('MyWidget has a title and message', (WidgetTester tester) async {
+                  // Create the widget by telling the tester to build it.
+                  await tester.pumpWidget(MyWidget(title: 'T', message: 'M'));
+                });
+              }
+            </code></pre>
+          </section>
+          <section>
+            <h3>Testing in Flutter: Integration testing</h3>
+            <pre><code class="dart" data-trim data-noescape>
+              import 'package:flutter_driver/flutter_driver.dart';
+              import 'package:test/test.dart';
+
+              void main() {
+                group('Counter App', () {
+                  final counterTextFinder = find.byValueKey('counter');
+                  final buttonFinder = find.byValueKey('increment');
+
+                  FlutterDriver driver;
+
+                  // Connect to the Flutter driver before running any tests.
+                  setUpAll(() async {
+                    driver = await FlutterDriver.connect();
+                  });
+
+                  // Close the connection to the driver after the tests have completed.
+                  tearDownAll(() async {
+                    if (driver != null) {
+                      driver.close();
+                    }
+                  });
+
+                  test('starts at 0', () async {
+                    // Use the `driver.getText` method to verify the counter starts at 0.
+                    expect(await driver.getText(counterTextFinder), "0");
+                  });
+
+                  test('increments the counter', () async {
+                    // First, tap the button.
+                    await driver.tap(buttonFinder);
+
+                    // Then, verify the counter text is incremented by 1.
+                    expect(await driver.getText(counterTextFinder), "1");
+                  });
+                });
+              }
+            </code></pre>
+          </section>
+          <section>
+            <h3>Conclusion: Is Flutter any good?</h3>
+            <ul>
+              <li>➕ Very similar to React</li>
+              <li>➕ Dart is like ES6</li>
+              <li>➕ Way better 3rd party libs</li>
+              <li>➕ Fast rendering</li>
+              <li>➕ Open Source</li>
+              <li>➕ Cross platform</li>
+              <li>➖ Most likely: Native (iOS, Android) Knowhow necessary</li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- Github acitons -->
+
+        <section>
+          <section data-background-image="https://media.giphy.com/media/t2Ugbz2ycyWnm/giphy.gif">
+            <h1 class="title">GitHub Actions</h1>
+          </section>
+          <section>
+            <h3>Why choose GitHub Actions?</h3>
+            <ul>
+              <li>Free? Still in Beta!</li>
+              <li>Every build step consists of a docker container</li>
+              <li>Designed wth pipelines in mind</li>
+              <li>yaml Syntax</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Folder structure</h3>
+            <pre><code class="bash" data-trim data-noescape>
+              project_root/
+              └── .github/
+                  └── workflows/
+                      ├── workflow1.yml
+                      └── workflow2.yml
+            </code></pre>
+          </section>
+          <section>
+            <h3>Example yaml</h3>
+            <pre><code class="yml" data-trim data-noescape>
+              name: Pull Request
+              on: pull_request
+              jobs:
+                job_test:
+                  name: Run Tests
+                  runs-on: ubuntu-16.04
+                  steps:
+                  - uses: actions/checkout@v1
+                  - name: Set up Go 1.13
+                    uses: actions/setup-go@v1
+                    with:
+                      go-version: 1.13
+                  - name: Get dependencies
+                    run: go mod download
+                  - name: Run Tests
+                    run: go test ./... -coverpkg=./... -coverprofile=coverage.out -covermode=atomic
+                    env: 
+                      DOGTURDS_DBHOST: ${{ secrets.mongoAtlasUrl }}
+                      DOGTURDS_APIKEY: test
+                  - name: Upload Codecoverage
+                    uses: codecov/codecov-action@v1.0.2
+                    with:
+                      token: ${{secrets.CODECOV_TOKEN}} #required
+                      file: ./coverage.out
+                      flags: unittests
+
+            </code></pre>
+          </section>
+          <section>
+            <h3>GitHub Action build</h3>
+            <img src="./img/githubactions.png" />
+          </section>
+          <section>
+            <h3>Conclusion: Is GitHub Actions any good?</h3>
+            <ul>
+              <li>➕ Easy to use</li>
+              <li>➕ Similar to other services (Concourse, GitLab, Bitbucket)</li>
+              <li>➕ Dockerized</li>
+              <li>➕ Secret management built in</li>
+              <li>➖ Documentation lacking information</li>
+              <li>➖ Heavy Changes from initial version until now</li>
+              <li>➖ Works only with GitHub</li>
+              <li>➖ Cloud-only</li>
+            </ul>
+          </section>
+        </section>
+      </div>
+    </div>
+
+    <script src="js/reveal.js"></script>
+
+    <script>
+      // More info about config & dependencies:
+      // - https://github.com/hakimel/reveal.js#configuration
+      // - https://github.com/hakimel/reveal.js#dependencies
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // More info https://github.com/hakimel/reveal.js#dependencies
+        dependencies: [
+          { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/search/search.js', async: true },
+          { src: 'plugin/zoom-js/zoom.js', async: true },
+          { src: 'plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+  </body>
+</html>
